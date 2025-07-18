@@ -1,0 +1,10 @@
+.vscode/
+.cache/
+src/re_ph.lua
+src/ph_old.lua
+src/ph.lua
+project.json
+lubu.json
+lubu.exe
+*.json
+*.exe

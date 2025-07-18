@@ -10,12 +10,11 @@ local inicfg = require("inicfg");
 local encoding = require("encoding");
 local font_flags = require("lib.moonloader").font_flag;
 local vkeys = require("lib.vkeys");
-local ffi = require("ffi");
 -------------------------------ENCODING-------------------------------
 encoding.default = "CP1251";
 local u8 = encoding.UTF8;
 --------------------------------FONTS---------------------------------
-local font = renderCreateFont("Arial", 14, font_flags.BOLD + font_flags.BORDER);
+local font = renderCreateFont("Tahoma", 14, font_flags.BOLD + font_flags.BORDER);
 ------------------------------CONSTANTS-------------------------------
 local show_loading_text = true;
 local script_loading_color = 0x4682B4;
@@ -32,30 +31,13 @@ local default_settings = inicfg.load({
 		ceject_key = "[53]",
 		frisk_key = "[54]"
     },
-	buffers = {
-		cuff_buffer = u8"/me надел наручники",
-		uncuff_buffer = u8"/me снял наручники",
-		follow_buffer = u8"/me повел за собой",
-		cput_buffer = u8"/me посадил в транспорт",
-		ceject_buffer = u8"/me высадил из транспорта",
-		frisk_buffer = u8"/me провел обыск"
-	}
 }, settings_filename);
 inicfg.save(default_settings, settings_filename);
 
 local screen_width, screen_height = getScreenResolution();
 local show_window = imgui.new.bool(false);
 
-local cuff_buffer = imgui.new.char[256](default_settings.buffers.cuff_buffer); 
-local uncuff_buffer = imgui.new.char[256](default_settings.buffers.uncuff_buffer);
-local follow_buffer = imgui.new.char[256](default_settings.buffers.follow_buffer);
-local cput_buffer = imgui.new.char[256](default_settings.buffers.cput_buffer);
-local ceject_buffer = imgui.new.char[256](default_settings.buffers.ceject_buffer);
-local frisk_buffer = imgui.new.char[256](default_settings.buffers.frisk_buffer);
-
 local commands_for_keys;
-local binds_for_commands;
-
 local cuff_hotkey;
 local uncuff_hotkey;
 local follow_hotkey;
@@ -91,15 +73,6 @@ function main()
 		[cput_hotkey:GetHotKey()] = "/cput",
 		[ceject_hotkey:GetHotKey()] = "/ceject",
 		[frisk_hotkey:GetHotKey()] = "/frisk"
-	};
-
-	binds_for_commands = {
-		["/cuff"] = u8:decode(default_settings.buffers.cuff_buffer),
-		["/uncuff"] = u8:decode(default_settings.buffers.uncuff_buffer),
-		["/follow"] = u8:decode(default_settings.buffers.follow_buffer),
-		["/cput"] = u8:decode(default_settings.buffers.cput_buffer),
-		["/ceject"] = u8:decode(default_settings.buffers.ceject_buffer),
-		["/frisk"] = u8:decode(default_settings.buffers.frisk_buffer)
 	};
 	
 	sampRegisterChatCommand(script_command, function() show_window[0] = not show_window[0] end);
@@ -170,7 +143,7 @@ imgui.OnFrame(
 		local hotkey_button_size = imgui.ImVec2(100, 20);
         imgui.SetNextWindowPos(imgui.ImVec2(screen_width / 2, screen_height / 2), imgui.Cond.FirstUseEver, imgui.ImVec2(0.5, 0.5))
         imgui.SetNextWindowSize(imgui.ImVec2(400, 250), imgui.Cond.FirstUseEver)
-        imgui.Begin(u8"Главное окно", show_window, imgui.WindowFlags.NoCollapse + imgui.WindowFlags.AlwaysAutoResize)
+        imgui.Begin(u8"Главное окно", show_window, imgui.WindowFlags.NoResize + imgui.WindowFlags.NoCollapse)
 		
 		if imgui.BeginTabBar(u8"Настройки") then
 			if imgui.BeginTabItem(u8"Горячие клавиши") then
@@ -212,26 +185,6 @@ imgui.OnFrame(
 				
 				imgui.EndTabItem();
 			end
-
-			if imgui.BeginTabItem(u8"Отыгровки") then
-				imgui.InputText(u8"Надеть наручники", cuff_buffer, ffi.sizeof(cuff_buffer));
-				imgui.InputText(u8"Снять наручники", uncuff_buffer, ffi.sizeof(uncuff_buffer));
-				imgui.InputText(u8"Вести за собой", follow_buffer, ffi.sizeof(follow_buffer));
-				imgui.InputText(u8"Посадить в транспорт", cput_buffer, ffi.sizeof(cput_buffer));
-				imgui.InputText(u8"Высадить из транспорта", ceject_buffer, ffi.sizeof(ceject_buffer));
-				imgui.InputText(u8"Провести обыск", frisk_buffer, ffi.sizeof(frisk_buffer));
-				imgui.NewLine();
-
-				if imgui.Button(u8"Сохранить бинды") then
-					SaveAllBinds();
-				end
-
-				if imgui.Button(u8"Сбросить бинды") then
-					ResetAllBinds();
-				end
-
-				imgui.EndTabItem();
-			end
 			
 			if imgui.BeginTabItem(u8"Информация") then
 				imgui.Text(u8"Помощник для полицейского на проекте Samp-Rp.\nАвтор: shlang (aka Adam_Ward).\nВерсия: 1.");
@@ -246,37 +199,6 @@ imgui.OnFrame(
     end
 );
 
-function SaveAllBinds()
-	default_settings.buffers.cuff_buffer = ffi.string(cuff_buffer);
-	default_settings.buffers.uncuff_buffer = ffi.string(uncuff_buffer);
-	default_settings.buffers.follow_buffer = ffi.string(follow_buffer);
-	default_settings.buffers.cput_buffer = ffi.string(cput_buffer);
-	default_settings.buffers.ceject_buffer = ffi.string(ceject_buffer);
-	default_settings.buffers.frisk_buffer = ffi.string(frisk_buffer);
-
-	binds_for_commands = {
-		["/cuff"] = u8:decode(default_settings.buffers.cuff_buffer),
-		["/uncuff"] = u8:decode(default_settings.buffers.uncuff_buffer),
-		["/follow"] = u8:decode(default_settings.buffers.follow_buffer),
-		["/cput"] = u8:decode(default_settings.buffers.cput_buffer),
-		["/ceject"] = u8:decode(default_settings.buffers.ceject_buffer),
-		["/frisk"] = u8:decode(default_settings.buffers.frisk_buffer)
-	};
-
-	inicfg.save(default_settings, settings_filename);
-end
-
-function ResetAllBinds()
-	imgui.StrCopy(cuff_buffer, "");
-	imgui.StrCopy(uncuff_buffer, "");
-	imgui.StrCopy(follow_buffer, "");
-	imgui.StrCopy(cput_buffer, "");
-	imgui.StrCopy(ceject_buffer, "");
-	imgui.StrCopy(frisk_buffer, "");
-
-	SaveAllBinds();
-end
-
 local is_debug = true;
 
 function OnPlayerTargeting(target_handle)
@@ -286,16 +208,8 @@ function OnPlayerTargeting(target_handle)
 			if wasKeyPressed(key[1]) then
 				if is_debug then
 					sampSendChat("/c " .. command .. " " .. target_id);
-					wait(500);
-					if (binds_for_commands[command]) then
-						sampSendChat("/c " .. binds_for_commands[command]);
-					end
 				else
 					sampSendChat(command .. " " .. target_id);
-					wait(500);
-					if (binds_for_commands[command]) then	
-						sampSendChat(binds_for_commands[command]);
-					end
 				end
 			end
 		end
